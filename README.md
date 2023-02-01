@@ -5,6 +5,14 @@ Express
 React
 PostgreSQL
 
-Functionality of the differing API endpoints can be tested on the homepage of the app. After installing the packages, you'll need to set up a .env file based on the example file.
+Functionality of the differing API endpoints can be tested on the homepage of the app. After installing the packages, you'll need to set up a .env file based on the below example:
+
+PGUSER="postgres username"
+PGPASSWORD="postgres password"
+DB="the database"
+PGHOST="db host"
+PGPORT="postgres port"
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
 
 - [Shopify CLI](https://shopify.dev/apps/tools/cli)

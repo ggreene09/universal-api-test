@@ -13,6 +13,6 @@ DB="the database"\
 PGHOST="db host"\
 PGPORT="postgres port"\
 SPOTIFY_CLIENT_ID=\
-SPOTIFY_CLIENT_SECRET=\
+SPOTIFY_CLIENT_SECRET=
 
 - [Shopify CLI](https://shopify.dev/apps/tools/cli)

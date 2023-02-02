@@ -20,8 +20,8 @@ import {
   getTrackbyIsrc, 
   addTrack,
   getTracksByArtist } from './helpers/pgfunctions.js';
-import dotenv from "dotenv";
-dotenv.config();
+// import dotenv from "dotenv";
+// dotenv.config();
 
 const USE_ONLINE_TOKENS = false;
 

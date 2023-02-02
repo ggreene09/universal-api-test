@@ -18,7 +18,7 @@
     "dotenv": "^16.0.3",
     "graphql-request": "^5.0.0",
     "node-fetch": "^3.3.0",
-    "postgres": "^3.3.1"
+    "pg": "^8.9.0"
   },
   "author": "gargreen1"
 }

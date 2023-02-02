@@ -20,6 +20,7 @@ export default function HomePage() {
 
   const artistSearchResults = useRef([]);
 
+  const isrcRegex = /^[A-Z]{2}[A-Z0-9]{3}\d{2}\d{5}$/;
 
   const trackAddConfirmation = track.error ? (
     <Toast content={track.message} error={true} onDismiss={() => trackUpdate({})} />
@@ -92,6 +93,11 @@ export default function HomePage() {
     </Frame>
   )
   async function addTrack() {
+    if (!isrcRegex.test(addIsrcValue)) {
+      trackUpdate({error: true, message: 'Invalid ISRC'});
+      addIsrcValueUpdate('');
+      return
+    }
     fetch(`${window.origin}/api/add_track`, {
       body: JSON.stringify({
         isrc: addIsrcValue
@@ -109,6 +115,11 @@ export default function HomePage() {
       });
   }
   async function findExistingByIsrc() {
+    if (!isrcRegex.test(findIsrcValue)) {
+      trackUpdate({error: true, message: 'Invalid ISRC'});
+      addIsrcValueUpdate('');
+      return
+    }
     fetch(`${window.origin}/api/search/by_isrc/?q=${findIsrcValue}`)
       .then(response => response.json())
       .then(data => {

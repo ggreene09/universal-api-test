@@ -2,40 +2,38 @@ import { Session } from '@shopify/shopify-api/dist/auth/session/index.js';
 import graphql from './shopify-graphql.js';
 import gql from 'graphql-tag';
 import fetch from 'node-fetch'
-import postgres from 'postgres';
-import dotenv from "dotenv";
-dotenv.config();
+import pkg from 'pg';
+const { Client } = pkg;
 
-const sql = postgres({
-    host: process.env.PGHOST,
-    port: process.env.PGPORT,
-    database: process.env.DB,
-    username: process.env.PGUSER,
-    password: process.env.PGPASSWORD
-});
 
 export async function storeCallback(session) {
+    const client = new Client();
     try {
-        const checkForExisting = await sql`
-            select * 
-            from universal_api_test.sessions
-            where shop = ${session.shop}
-        `;
-        if (checkForExisting.length > 0) {
-            const update = await sql`
-                update universal_api_test.sessions set
-                id = ${session.id},
-                domain_id = ${session.id},
-                state = ${session.state},
-                scope = ${session.scope}
-                where shop = ${session.shop}
+        await client.connect();
 
-                returning *
-            `;
+        const checkForExisting = await client.query({
+            text: `select * from universal_api_test.sessions
+            where shop = $1;`,
+            values: [session.shop]
+        });
+        if (checkForExisting.length > 0) {
+            const update = await client.query({
+                text: `
+                update universal_api_test.sessions set
+                id = $1,
+                domain_id = $2,
+                state = $3,
+                scope = $4
+                where shop = $5
+
+                returning *;
+                `,
+                values: [session.id, session.id, session.state, session.scope, session.shop]
+            });
         }
         else {
-            const entry = await sql`
-                insert into universal_api_test.sessions (
+            const entry = await client.query({
+                text: `insert into universal_api_test.sessions (
                     shop,
                     id,
                     domain_id,
@@ -43,20 +41,19 @@ export async function storeCallback(session) {
                     state,
                     scope,
                     isonline
-                ) values (
-                    ${session.shop},
-                    ${session.id},
-                    ${session.id},
-                    ${session.accessToken},
-                    ${session.state},
-                    ${session.scope},
-                    false
-                )
-                returning *
-            `;
+                    ) values (
+                        $1,
+                        $2,
+                        $3,
+                        $4,
+                        $5,
+                        $6,
+                        $7
+                    )`,
+                values: [session.shop, session.id, session.id, session.accessToken, session.state, session.scope, 'false']    
+            });
             const topic = "APP_UNINSTALLED";
             const callbackUrl = `${process.env.HOST}/api/webhooks`;
-            console.log(callbackUrl);
             const query = gql`mutation {
                 webhookSubscriptionCreate(
                   topic: ${topic}
@@ -76,19 +73,24 @@ export async function storeCallback(session) {
               }`;
             const registerHook = await graphql(session.shop, session.accessToken, query);
         }
+        await client.end();
         return true;
     } catch (e) {
+        await client.end()
         console.log(e);
     }
 }
 export async function loadCallback(id) {
+    const client = new Client();
     try {
-        const search = await sql`
-        select * from universal_api_test.sessions
-        where id = ${id}
-        or domain_id = ${id}
-        `;
-        const searchResult = search[0];
+        await client.connect();
+        const search = await client.query({
+            text: `select * from universal_api_test.sessions
+            where id = $1
+            or domain_id = $2`,
+            values: [id, id],
+        });
+        const searchResult = search.rows[0];
         const session = new Session(
             searchResult.id,
             searchResult.shop,
@@ -104,8 +106,10 @@ export async function loadCallback(id) {
         if (session.expires && typeof session.expires === 'string') {
             session.expires = new Date(session.expires);
         }
+        await client.end()
         return session;
     } catch (e) {
+        await client.end()
         console.log(e);
     }
 }
@@ -118,40 +122,60 @@ export async function deleteCallback(id) {
 }
 
 export async function findSessionsByShopCallback(shop) {
-    const search = await sql`
-        select * from universal_api_test.sessions
-        where shop = ${shop}
-    `;
-    return search
+    const client = new Client();
+    await client.connect();
+    const search = await client.query({
+        text: `select * from universal_api_test.sessions
+        where shop = $1`,
+        values: [shop],
+    });
+    await client.end()
+    return search.rows
 }
 export async function deleteSessionsCallback(shop) {
-    const search = await sql`
-        select * from universal_api_test.sessions
-        where shop = ${shop}
-    `;
-    return search
+    const client = new Client();
+    await client.connect();
+    const search = await client.query({
+        text: `select * from universal_api_test.sessions
+        where shop = $1`,
+        values: [shop],
+    });
+    await client.end()
+    return search.rows
 }
 export async function deleteAccountByShop(shop) {
-    const deleteShop = await sql`
-        delete from universal_api_test.sessions
-        where shop = ${shop}
-    `;
+    const client = new Client();
+    await client.connect();
+    const deleteShop = await client.query({
+        text: `delete from universal_api_test.sessions
+        where shop = $1`,
+        values: [shop],
+    });
+    await client.end()
     return deleteShop;
 }
 
 export async function getTracksByArtist(artist) {
-    const tracks = await sql`
-        select * from universal_api_test.tracks
-        where lower(artists) like ${'%' + artist.toLowerCase() + '%'}
-    `;
-    return tracks;
+    const client = new Client();
+    await client.connect();
+    const tracks = await client.query({
+        text: `select * from universal_api_test.tracks
+        where lower(artists) like '%'|| $1 || '%'`,
+        values: [artist.toLowerCase()],
+    });
+    await client.end()
+    return tracks.rows;
 }
 export async function getTrackbyIsrc(isrc) {
-    const track = await sql`
-    select * from universal_api_test.tracks
-    where isrc = ${isrc}
-`;
-return track[0];
+    const client = new Client();
+    await client.connect();
+    const track = await client.query({
+        text: `select * from universal_api_test.tracks
+    where isrc = $1`,
+        values: [isrc]
+    });
+    await client.end()
+    return track.rows[0];
 }
 export async function addTrack(o) {
     const checkExistingTracks = await getTrackbyIsrc(o.isrc);
@@ -168,22 +192,27 @@ export async function addTrack(o) {
     }, { popularity: -1, error: true, message: 'No tracks found' });
     if (track.error) return track;
     const artistNames = track.artists?.map(artist => artist.name).join('|');
-    const query = await sql`insert into universal_api_test.tracks (
+    const client = new Client();
+    await client.connect();
+    const query = await client.query({
+        text: `insert into universal_api_test.tracks (
         isrc,
         img_uri,
         title,
         artists,
         preview_url
         ) values (
-        ${track.external_ids.isrc},
-        ${track.album.images[0].url},
-        ${track.name},
-        ${artistNames},
-        ${track.preview_url}
+        $1,
+        $2,
+        $3,
+        $4,
+        $5
         )
-        returning *
-        `;
-    return query[0];
+        returning *`,
+        values: [track.external_ids.isrc, track.album.images[0].url, track.name, artistNames, track.preview_url]
+    });
+    await client.end()
+    return query.rows[0];
 }
 async function getSpotifyAccessToken() {
     const params = new URLSearchParams();

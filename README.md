@@ -5,14 +5,13 @@ Express\
 React\
 PostgreSQL
 
-Functionality of the differing API endpoints can be tested on the homepage of the app. After installing the packages, you'll need to set up a .env file based on the below example:
+Functionality of the differing API endpoints can be tested on the homepage of the app. 
 
-PGUSER="postgres username"\
-PGPASSWORD="postgres password"\
-DB="the database"\
-PGHOST="db host"\
-PGPORT="postgres port"\
-SPOTIFY_CLIENT_ID=\
-SPOTIFY_CLIENT_SECRET=
+- Create a [Shopify Partners](https://www.shopify.com/partners) account
+- Once in your account, go to Stores > Add Store > Create development store
+- Check the "Create a store to test and build"
+- Give your store a name
+- Check the "Developer Preview" option and save
+- Replace the "example.myshopify.com" in the below URL with your myshopify.com domain. This will install the app on your store.
 
-- [Shopify CLI](https://shopify.dev/apps/tools/cli)
+https://universal-api-test.herokuapp.com/?shop=example.myshopify.com

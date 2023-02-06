@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 import fetch from 'node-fetch'
 import pkg from 'pg';
 const { Client } = pkg;
+import CryptoJS from 'crypto-js';
 
 
 export async function storeCallback(session) {
@@ -32,6 +33,7 @@ export async function storeCallback(session) {
             });
         }
         else {
+            const encToken = CryptoJS.AES.encrypt(session.accessToken, process.env.DB_SECRET).toString();
             const entry = await client.query({
                 text: `insert into universal_api_test.sessions (
                     shop,
@@ -50,7 +52,7 @@ export async function storeCallback(session) {
                         $6,
                         $7
                     )`,
-                values: [session.shop, session.id, session.id, session.accessToken, session.state, session.scope, 'false']    
+                values: [session.shop, session.id, session.id, encToken, session.state, session.scope, 'false']    
             });
             const topic = "APP_UNINSTALLED";
             const callbackUrl = `${process.env.HOST}/api/webhooks`;

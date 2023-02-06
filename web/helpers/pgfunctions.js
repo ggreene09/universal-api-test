@@ -5,7 +5,8 @@ import fetch from 'node-fetch'
 import pkg from 'pg';
 const { Client } = pkg;
 import CryptoJS from 'crypto-js';
-
+import dotenv from "dotenv";
+dotenv.config();
 
 export async function storeCallback(session) {
     const client = new Client();
@@ -124,6 +125,7 @@ export async function deleteCallback(id) {
 }
 
 export async function findSessionsByShopCallback(shop) {
+    try {
     const client = new Client();
     await client.connect();
     const search = await client.query({
@@ -133,6 +135,9 @@ export async function findSessionsByShopCallback(shop) {
     });
     await client.end()
     return search.rows
+} catch(e) {
+    console.log(e);
+}
 }
 export async function deleteSessionsCallback(shop) {
     const client = new Client();

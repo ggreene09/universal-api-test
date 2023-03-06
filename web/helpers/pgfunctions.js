@@ -102,7 +102,8 @@ export async function loadCallback(id) {
         );
         session.scope = searchResult.scope;
         session.onlineAccessInfo = JSON.parse(searchResult.onlineaccessinfo);
-        session.accessToken = searchResult.accesstoken;
+        session.accessToken = CryptoJS.AES.decrypt(searchResult.accesstoken, process.env.DB_SECRET)
+            .toString(CryptoJS.enc.Utf8);
         const date = new Date();
         date.setDate(date.getDate() + 1);
         session.expires = date;
